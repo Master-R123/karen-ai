@@ -20,7 +20,7 @@ class KarenApp(App):
         
         self.scroll = ScrollView(size_hint=(1, 0.85))
         self.chat_history = Label(
-            text="🤖 [KAREN]: Systems online! Tu batao, aaj kya program hai?\n",
+            text="🤖 [KAREN]: Systems online! Tum batao, aaj kya program hai?\n",
             font_size='16sp',
             size_hint_y=None,
             color=(0.2, 0.8, 1, 1),
