@@ -1,7 +1,5 @@
 import os
-from google import genai
-from google.genai import types
-
+import requests
 import kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -11,7 +9,6 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 
 RAW_KEY = "AQ.Ab8RN6LbdlGqc9MzzTZNi5_FyK7Sr_JwDA1xpz9z1Hv3wEBU_g"
-client = genai.Client(api_key=RAW_KEY.strip())
 
 class KarenApp(App):
     def build(self):
@@ -20,7 +17,7 @@ class KarenApp(App):
         
         self.scroll = ScrollView(size_hint=(1, 0.85))
         self.chat_history = Label(
-            text="🤖 [KAREN]: Systems online! Tum batao, aaj kya program hai?\n",
+            text="🤖 [KAREN]: Systems online! Tu batao, aaj kya program hai?\n",
             font_size='16sp',
             size_hint_y=None,
             color=(0.2, 0.8, 1, 1),
@@ -48,18 +45,21 @@ class KarenApp(App):
         self.user_input.text = ""
         
         try:
-            response = client.models.generate_content(
-                model="gemma-4-26b-a4b-it",
-                contents=user_text,
-                config=types.GenerateContentConfig(
-                    system_instruction=(
-                        "You are KAREN, a sharp, witty, ultra-smart AI assistant and close friend. "
-                        "You talk in a casual, informal tone (use 'tu/tum/batao' in Hindi, no formal 'aap')."
-                    ),
-                    tools=[{"google_search": {}}]
-                )
-            )
-            self.chat_history.text += f"🤖 [KAREN]: {response.text}\n"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={RAW_KEY.strip()}"
+            payload = {
+                "contents": [{"parts": [{"text": user_text}]}],
+                "systemInstruction": {
+                    "parts": [{"text": "You are KAREN, a sharp, witty AI assistant. Speak in casual informal Hinglish (tu/tum/batao)."}]
+                }
+            }
+            res = requests.post(url, json=payload, timeout=15)
+            data = res.json()
+            
+            if "candidates" in data and len(data["candidates"]) > 0:
+                reply = data["candidates"][0]["content"]["parts"][0]["text"]
+                self.chat_history.text += f"🤖 [KAREN]: {reply}\n"
+            else:
+                self.chat_history.text += f"⚠️ API Response Error: {data}\n"
         except Exception as e:
             self.chat_history.text += f"⚠️ Error: {str(e)}\n"
 
